@@ -1,0 +1,65 @@
+---
+- hosts: '{{ target }}'
+  remote_user: root
+
+  tasks:
+  - name: Update all packages
+    yum:
+      name: '*'
+      state: latest
+  - name: Install epel-release
+    yum: name=epel-release state=latest update_cache=yes
+  - name: Install standard packages
+    yum: name={{item}} state=latest update_cache=yes
+    with_items:
+      - vim
+      - screen
+      - wget
+      - firewalld
+      - git
+      - ipa-client
+      - ksh
+      - libmcrypt
+      - bind-utils
+      - libtool-libs
+      - perl-Digest-MD5
+      - https://s3.amazonaws.com/opsview-agents/centos7/opsview-agent-5.4.1.172541017-1.ct7.x86_64.rpm
+
+  - name: Start and enable firewalld
+    service: name=firewalld state=started enabled=yes
+
+  - name: Enable FreeIPA-client firewall rules
+    firewalld: port=464/tcp permanent=true state=enabled
+  - name: FreeIPA-client firewall rules continued
+    firewalld: port=464/udp permanent=true state=enabled
+  - name: Enable opsview-agent firewall rules
+    firewalld: port=5666/tcp permanent=true state=enabled
+
+  - name: Reload firewall
+    command: firewall-cmd --reload
+
+
+  - name: Start and Enable oddjobd
+    systemd:
+      name: oddjobd
+      state: started
+      enabled: yes
+  
+  - name: Make sure NetworkManager is stopped and disabled
+    systemd:
+      name: NetworkManager
+      state: stopped
+      enabled: no
+
+  vars_prompt:
+    - name: enroll
+      prompt: "Enroll user password"
+  vars:
+    freeipaclient_server: "freeipa.thedavid.center"
+    freeipaclient_domain: thedavid.center
+    freeipaclient_enroll_user: admin
+    freeipaclient_enroll_pass: "{{ vars.enroll }}"
+  roles:
+    - alvaroaleman.freeipa-client
+
+...
