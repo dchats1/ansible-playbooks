@@ -54,7 +54,7 @@
   vars_prompt:
     - name: enroll
       prompt: "Enroll user password"
-  vars:
+  vars: # See README for link to install freeipa-client module
     freeipaclient_server: "freeipa.thedavid.center"
     freeipaclient_domain: thedavid.center
     freeipaclient_enroll_user: admin
