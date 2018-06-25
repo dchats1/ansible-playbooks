@@ -40,7 +40,7 @@
     ufw:
       rule: allow
       port: 464
-      proto: tcp
+      proto: udp
   - name: Enable opsview-agent firewall rules
     ufw:
       rule: allow
