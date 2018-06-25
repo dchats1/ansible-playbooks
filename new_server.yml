@@ -1,0 +1,128 @@
+---
+- hosts: '{{ target }}'
+  remote_user: root
+
+  tasks:
+  - name: Update all packages
+    yum:
+      name: '*'
+      state: latest
+    when: ansible_os_family == "RedHat"
+
+  - name: Update all packages
+    apt:
+      name: '*' 
+      state: latest
+      force_apt_get: yes 
+    when: ansible_os_family == "Debian"
+
+  - name: Install standard packages
+    apt: name={{item}} state=latest update_cache=yes
+    with_items:
+      - vim
+      - screen
+      - wget
+      - git
+      - libgetopt-mixed-perl
+      - libmcrypt4
+    when: ansible_os_family == "Debian"
+  - name: Install Opsview Agent
+    apt:
+      deb: https://s3.amazonaws.com/opsview-agents/ubuntu16/opsview-agent_5.4.1.172541017-1xenial1_amd64.deb
+    when: ansible_os_family == "Debian"
+
+  - name: Install epel-release
+    yum: name=epel-release state=latest update_cache=yes
+    when: ansible_os_family == "RedHat"
+  - name: Install standard packages
+    yum: name={{item}} state=latest update_cache=yes
+    with_items:
+      - vim
+      - screen
+      - wget
+      - firewalld
+      - git
+      - ipa-client
+      - ksh
+      - libmcrypt
+      - bind-utils
+      - libtool-libs
+      - perl-Digest-MD5
+      - https://s3.amazonaws.com/opsview-agents/centos7/opsview-agent-5.4.1.172541017-1.ct7.x86_64.rpm
+    when: ansible_os_family == "RedHat"
+
+  - name: Start and enable firewalld
+    service: name=firewalld state=started enabled=yes
+    when: ansible_os_family == "RedHat"
+
+  - name: Enable FreeIPA-client firewall rules
+    firewalld: port=464/tcp permanent=true state=enabled
+    when: ansible_os_family == "RedHat"
+  - name: FreeIPA-client firewall rules continued
+    firewalld: port=464/udp permanent=true state=enabled
+    when: ansible_os_family == "RedHat"
+  - name: Enable opsview-agent firewall rules
+    firewalld: port=5666/tcp permanent=true state=enabled
+    when: ansible_os_family == "RedHat"
+
+  - name: Reload firewall
+    command: firewall-cmd --reload
+    when: ansible_os_family == "RedHat"
+
+  - name: Start and enable ufw.service
+    systemd:
+      name: ufw 
+      state: started
+      enabled: yes 
+    when: ansible_os_family == "Debian"
+
+  - name: enable ufw 
+    ufw:
+      state: enabled
+    when: ansible_os_family == "Debian"
+
+  - name: FreeIPA-client tcp firewall rules
+    ufw:
+      rule: allow
+      port: 464 
+      proto: tcp 
+    when: ansible_os_family == "Debian"
+  - name: FreeIPA-client udp firewall rules
+    ufw:
+      rule: allow
+      port: 464 
+      proto: udp 
+    when: ansible_os_family == "Debian"
+  - name: Enable opsview-agent firewall rules
+    ufw:
+      rule: allow
+      port: 5666
+      proto: tcp 
+    when: ansible_os_family == "Debian"
+
+  - name: Start and Enable oddjobd
+    systemd:
+      name: oddjobd
+      state: started
+      enabled: yes
+    when: ansible_os_family == "RedHat"
+  
+  - name: Make sure NetworkManager is stopped and disabled
+    systemd:
+      name: NetworkManager
+      state: stopped
+      enabled: no
+    when: ansible_os_family == "RedHat"
+
+  vars_prompt:
+    - name: enroll
+      prompt: "Enroll user password"
+  vars: # See README for link to install freeipa-client module
+    freeipaclient_server: "freeipa.thedavid.center"
+    freeipaclient_domain: thedavid.center
+    freeipaclient_enroll_user: admin
+    freeipaclient_enroll_pass: "{{ vars.enroll }}"
+  roles:
+    - alvaroaleman.freeipa-client
+
+...
