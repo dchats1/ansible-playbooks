@@ -38,7 +38,6 @@
     - name: Install standard packages
       apt: name={{item}} state=latest update_cache=yes
       with_items:
-        - vim
         - screen
         - wget
         - git
@@ -121,4 +120,7 @@
   roles:
     - alvaroaleman.freeipa-client
 
+  - name: Restart Server
+    command: /sbin/reboot
+    
 ...
