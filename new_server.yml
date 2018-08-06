@@ -109,6 +109,12 @@
         enabled: no
     when: ansible_os_family == "RedHat"
 
+  - name: Restart Server
+    command: /sbin/reboot
+
+  - name: Wait for reconnect
+    local_action: wait_for host={{ ansible_ssh_host }}
+
   vars_prompt:
     - name: enroll
       prompt: "Enroll user password"
@@ -120,7 +126,5 @@
   roles:
     - alvaroaleman.freeipa-client
 
-  - name: Restart Server
-    command: /sbin/reboot
     
 ...
