@@ -20,12 +20,6 @@
         - firewalld
         - git
         - ipa-client
-        - ksh
-        - libmcrypt
-        - bind-utils
-        - libtool-libs
-        - perl-Digest-MD5
-        - https://s3.amazonaws.com/opsview-agents/centos7/opsview-agent-5.4.1.172541017-1.ct7.x86_64.rpm
     when: ansible_os_family == "RedHat"
 
   - block:
@@ -41,11 +35,6 @@
         - screen
         - wget
         - git
-        - libgetopt-mixed-perl
-        - libmcrypt4
-    - name: Install Opsview Agent
-      apt:
-        deb: https://s3.amazonaws.com/opsview-agents/ubuntu16/opsview-agent_5.4.1.172541017-1xenial1_amd64.deb
     when: ansible_os_family == "Debian"
 
   - block:
@@ -56,8 +45,6 @@
       firewalld: port=464/tcp permanent=true state=enabled
     - name: FreeIPA-client firewall rules continued
       firewalld: port=464/udp permanent=true state=enabled
-    - name: Enable opsview-agent firewall rules
-      firewalld: port=5666/tcp permanent=true state=enabled
   
     - name: Reload firewall
       command: firewall-cmd --reload
@@ -84,11 +71,6 @@
         rule: allow
         port: 464 
         proto: udp 
-    - name: Enable opsview-agent firewall rules
-      ufw:
-        rule: allow
-        port: 5666
-        proto: tcp 
     - name: Allow SSH access
       ufw:
         rule: allow
@@ -125,6 +107,4 @@
     freeipaclient_enroll_pass: "{{ vars.enroll }}"
   roles:
     - alvaroaleman.freeipa-client
-
-    
 ...
