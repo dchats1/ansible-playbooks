@@ -2,12 +2,24 @@
 - hosts: '{{ target }}'
   remote_user: root
 
+  vars_prompt:
+    - name: enroll
+      prompt: "Enroll user password"
+  vars: # See README for link to install freeipa-client module
+    freeipaclient_server: "freeipa.thedavid.center"
+    freeipaclient_domain: thedavid.center
+    freeipaclient_enroll_user: admin
+    freeipaclient_enroll_pass: "{{ vars.enroll }}"
+  roles:
+    - alvaroaleman.freeipa-client
+
   tasks:
   - block:
     - name: Update all RHEL packages
       yum:
         name: '*'
         state: latest
+      tags: update
   
     - name: Install epel-release
       yum: name=epel-release state=latest update_cache=yes
@@ -20,6 +32,7 @@
         - firewalld
         - git
         - ipa-client
+      tags: packages
     when: ansible_os_family == "RedHat"
 
   - block:
@@ -28,6 +41,7 @@
         name: '*' 
         state: latest
         force_apt_get: yes 
+      tags: update
   
     - name: Install standard packages
       apt: name={{item}} state=latest update_cache=yes
@@ -35,6 +49,7 @@
         - screen
         - wget
         - git
+      tags: packages
     when: ansible_os_family == "Debian"
 
   - block:
@@ -45,6 +60,8 @@
       firewalld: port=464/tcp permanent=true state=enabled
     - name: FreeIPA-client firewall rules continued
       firewalld: port=464/udp permanent=true state=enabled
+    - name: Prometheus node_exporter firewall rule
+      firewalld: port=9100/tcp permanent=true state=enabled
   
     - name: Reload firewall
       command: firewall-cmd --reload
@@ -75,6 +92,11 @@
       ufw:
         rule: allow
         name: OpenSSH
+    - name: Allow Prometheus node_exporter
+      ufw:
+        rule: allow
+        port: 9100
+        proto: tcp
     when: ansible_os_family == "Debian"
 
   - block:
@@ -91,14 +113,4 @@
         enabled: no
     when: ansible_os_family == "RedHat"
 
-  vars_prompt:
-    - name: enroll
-      prompt: "Enroll user password"
-  vars: # See README for link to install freeipa-client module
-    freeipaclient_server: "freeipa.thedavid.center"
-    freeipaclient_domain: thedavid.center
-    freeipaclient_enroll_user: admin
-    freeipaclient_enroll_pass: "{{ vars.enroll }}"
-  roles:
-    - alvaroaleman.freeipa-client
 ...
