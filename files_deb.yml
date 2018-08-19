@@ -1,5 +1,0 @@
-tasks:
-- name: put screenrc file in etc 
-  copy: src=~/plays/files/screenrc/.screenrc dest=/etc/
-- name: put vimrc file in etc
-  copy: src=/plays/files/vimrc dest=/etc/vim/

@@ -1,0 +1,27 @@
+---
+- name: Create node_exporter user
+  user:
+    name: node_exporter
+    shell: /bin/false
+
+- name: Put node_exporter.service into /etc/systemd/system/
+  copy:
+    src: ~/plays/files/node_exporter.service
+    dest: /etc/systemd/system/
+    mode: 0644
+
+- name: Start node_exporter service    
+  systemd:
+    daemon_reload: yes
+    name: node_exporter
+    state: started
+    enabled: yes
+
+- name: create /opt/node_exporter directory
+  file:
+    path: /opt/node_exporter
+    state: directory
+    mode: 0755
+
+- name: put node_exporter executible in /opt/node_exporter directory
+  copy: src=~/plays/files/node_exporter dest=/opt/node_exporter/
